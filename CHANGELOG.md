@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.1.2] - 2025-05-21
+### Added
+- Implemented release build script.
+
 ## [1.1.1] - 2025-05-21
 ### Added
 - Implemented settings for element, page, post type selection/exclusions.

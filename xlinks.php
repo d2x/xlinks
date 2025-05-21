@@ -2,7 +2,7 @@
 /*
 Plugin Name: xlinks
 Description: A plugin to insert deep links into WordPress content with customizable settings.
-Version: 1.1.1
+Version: 1.1.2
 Author: d2x
 */
 
@@ -463,7 +463,7 @@ function xlinks_check_for_updates($transient) {
     $repo_owner = 'd2x';
     $repo_name = 'xlinks';
     $plugin_file = plugin_basename(__FILE__); // e.g., xlinks/xlinks.php
-    $current_version = '1.1.1';
+    $current_version = '1.1.2';
 
     // Fetch the latest release information from GitHub
     $response = wp_remote_get(
