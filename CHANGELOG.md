@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.1.3] - 2025-05-21
+### Added
+- Minor UI updates.
+
 ## [1.1.2] - 2025-05-21
 ### Added
 - Implemented release build script.

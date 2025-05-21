@@ -2,7 +2,7 @@
 /*
 Plugin Name: xlinks
 Description: A plugin to insert deep links into WordPress content with customizable settings.
-Version: 1.1.2
+Version: 1.1.3
 Author: d2x
 */
 
@@ -59,7 +59,7 @@ function xlinks_settings_page() {
             ?>
             <h2 id="exclusions">Exclusions</h2>
             <p>CSS Selectors (.class / #id, one per line):</p>
-            <textarea name="excluded_selectors" rows="5"><?php echo esc_textarea(implode("\n", $settings['excluded_selectors'] ?? array())); ?></textarea>
+            <textarea name="excluded_selectors" rows="5" cols="48"><?php echo esc_textarea(implode("\n", $settings['excluded_selectors'] ?? array())); ?></textarea>
             <div style="display: flex; align-items: center;">
                 <div>
                     <p>Available Pages</p>
@@ -186,8 +186,8 @@ function xlinks_deep_links_page() {
                         <th>Link Text</th>
                         <th>Destination Type</th>
                         <th>Destination</th>
-                        <th>Enable on Pages</th>
-                        <th>Enable on Posts</th>
+                        <th>Rewrite Pages</th>
+                        <th>Rewrite Posts</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -463,7 +463,7 @@ function xlinks_check_for_updates($transient) {
     $repo_owner = 'd2x';
     $repo_name = 'xlinks';
     $plugin_file = plugin_basename(__FILE__); // e.g., xlinks/xlinks.php
-    $current_version = '1.1.2';
+    $current_version = '1.1.3';
 
     // Fetch the latest release information from GitHub
     $response = wp_remote_get(

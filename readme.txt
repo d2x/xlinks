@@ -4,7 +4,7 @@ Tags: deep links, linking, automation
 Requires at least: 5.0
 Tested up to: 6.6
 Requires PHP: 7.0
-Stable tag: 1.1.2
+Stable tag: 1.1.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -20,6 +20,10 @@ xlinks allows you to automatically insert deep links into your WordPress content
 4. Configure settings and deep links via the 'xlinks' menu in the WordPress admin.
 
 == Changelog ==
+= 1.1.3 =
+### Added
+ * Minor UI updates.
+
 = 1.1.2 =
 ### Added
  * Implemented release build script.
@@ -35,6 +39,9 @@ xlinks allows you to automatically insert deep links into your WordPress content
 * Initial release with core deep linking functionality.
 
 == Upgrade Notice ==
+= 1.1.3 =
+Minor layout changes
+
 = 1.1.2 =
 Initial release
 
