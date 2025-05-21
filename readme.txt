@@ -38,9 +38,6 @@ xlinks allows you to automatically insert deep links into your WordPress content
 = 1.1.2 =
 Initial release
 
-= 1.1.2 =
-Implemented release build script
-
 = 1.1.1 =
 Adds element and content type selection, page exclusions, and automatic updates from GitHub.
 
