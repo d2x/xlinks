@@ -148,7 +148,7 @@ function xlinks_deep_links_page() {
 
     if (isset($_POST['xlinks_save'])) {
         check_admin_referer('xlinks_save');
-        $deep_links = array();
+        $submitted_deep_links = array();
         if (isset($_POST['deep_link'])) {
             foreach ($_POST['deep_link'] as $index => $data) {
                 $link_text = sanitize_text_field($data['link_text']);
@@ -157,7 +157,7 @@ function xlinks_deep_links_page() {
                 $enable_page = isset($data['enable_page']) ? 1 : 0;
                 $enable_post = isset($data['enable_post']) ? 1 : 0;
                 if (!empty($link_text) && !empty($destination_type) && $destination_id > 0) {
-                    $deep_links[] = array(
+                    $submitted_deep_links[] = array(
                         'link_text' => $link_text,
                         'destination_type' => $destination_type,
                         'destination_id' => $destination_id,
@@ -167,11 +167,51 @@ function xlinks_deep_links_page() {
                 }
             }
         }
-        update_option('xlinks_deep_links', $deep_links);
-        echo '<div class="updated"><p>Settings saved.</p></div>';
+
+        // Group by lowercase "link_text" for case-insensitive comparison
+        $grouped = array();
+        foreach ($submitted_deep_links as $deep_link) {
+            $lt = strtolower($deep_link['link_text']);
+            if (!isset($grouped[$lt])) {
+                $grouped[$lt] = array();
+            }
+            $grouped[$lt][] = $deep_link;
+        }
+
+        // Separate non-duplicates and collect duplicates
+        $unique_deep_links = array();
+        $duplicate_link_texts = array();
+        foreach ($grouped as $lt => $links) {
+            if (count($links) == 1) {
+                $unique_deep_links[] = $links[0];
+            } else {
+                foreach ($links as $link) {
+                    if (!in_array($link['link_text'], $duplicate_link_texts)) {
+                        $duplicate_link_texts[] = $link['link_text'];
+                    }
+                }
+            }
+        }
+
+        // Save only non-duplicates
+        update_option('xlinks_deep_links', $unique_deep_links);
+
+        // Set notice
+        if (!empty($duplicate_link_texts)) {
+            $notice = '<div class="error"><p>The following link texts were duplicated and not saved: ' . esc_html(implode(', ', $duplicate_link_texts)) . '</p></div>';
+        } else {
+            $notice = '<div class="updated"><p>Settings saved.</p></div>';
+        }
+    } else {
+        $notice = '';
     }
 
     $deep_links = get_option('xlinks_deep_links', array());
+    // Sort deep links alphabetically by "link_text"
+    usort($deep_links, function($a, $b) {
+        return strnatcasecmp($a['link_text'], $b['link_text']);
+    });
+
     $post_types = get_post_types(array('public' => true), 'objects');
     $filtered_post_types = array_filter($post_types, function($post_type) use ($enabled_content_types) {
         return in_array($post_type->name, $enabled_content_types);
@@ -179,72 +219,69 @@ function xlinks_deep_links_page() {
     ?>
     <div class="wrap">
         <h1>Deep Links</h1>
+        <?php echo $notice; ?>
         <form method="post">
             <?php wp_nonce_field('xlinks_save'); ?>
             <table id="deep-links-table" class="widefat">
                 <thead>
-                    <tr>
-                        <th>Link Text</th>
-                        <th>Destination Type</th>
-                        <th>Destination</th>
-                        <th>Rewrite Pages</th>
-                        <th>Rewrite Posts</th>
-                        <th></th>
-                    </tr>
+                <tr>
+                    <th>Link Text</th>
+                    <th>Destination Type</th>
+                    <th>Destination</th>
+                    <th>Rewrite Pages</th>
+                    <th>Rewrite Posts</th>
+                    <th></th>
+                </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($deep_links as $index => $deep_link) { ?>
-                        <tr>
-                            <td><input type="text" name="deep_link[<?php echo $index; ?>][link_text]" value="<?php echo esc_attr($deep_link['link_text']); ?>" class="regular-text"></td>
-                            <td>
-                                <select name="deep_link[<?php echo $index; ?>][destination_type]" class="destination-type">
-                                    <?php
-                                    $selected_type = $deep_link['destination_type'];
-                                    $options = array();
+                <?php foreach ($deep_links as $index => $deep_link) { ?>
+                    <tr>
+                        <td><input type="text" name="deep_link[<?php echo $index; ?>][link_text]" value="<?php echo esc_attr($deep_link['link_text']); ?>" class="regular-text"></td>
+                        <td>
+                            <select name="deep_link[<?php echo $index; ?>][destination_type]" class="destination-type">
+                                <?php
+                                $selected_type = $deep_link['destination_type'];
+                                $options = array();
 
-                                    // Add disabled selected type (if applicable)
-                                    if (!in_array($selected_type, $enabled_content_types)) {
-                                        $post_type_object = get_post_type_object($selected_type);
-                                        if ($post_type_object) {
-                                            $options[] = array(
-                                                'value' => $selected_type,
-                                                'label' => $post_type_object->label . ' (disabled)',
-                                                'selected' => true,
-                                                'disabled' => true,
-                                            );
-                                        }
-                                    }
-
-                                    // Add enabled content types
-                                    foreach ($filtered_post_types as $post_type) {
+                                if (!in_array($selected_type, $enabled_content_types)) {
+                                    $post_type_object = get_post_type_object($selected_type);
+                                    if ($post_type_object) {
                                         $options[] = array(
-                                            'value' => $post_type->name,
-                                            'label' => $post_type->label,
-                                            'selected' => ($selected_type === $post_type->name),
-                                            'disabled' => false,
+                                            'value' => $selected_type,
+                                            'label' => $post_type_object->label . ' (disabled)',
+                                            'selected' => true,
+                                            'disabled' => true,
                                         );
                                     }
+                                }
 
-                                    // Sort options by label
-                                    usort($options, function($a, $b) {
-                                        return strnatcasecmp($a['label'], $b['label']);
-                                    });
+                                foreach ($filtered_post_types as $post_type) {
+                                    $options[] = array(
+                                        'value' => $post_type->name,
+                                        'label' => $post_type->label,
+                                        'selected' => ($selected_type === $post_type->name),
+                                        'disabled' => false,
+                                    );
+                                }
 
-                                    // Output sorted options
-                                    foreach ($options as $option) {
-                                        echo '<option value="' . esc_attr($option['value']) . '" ' . ($option['selected'] ? 'selected' : '') . '>' . esc_html($option['label']) . '</option>';
-                                    }
-                                    ?>
-                                </select>
-                            </td>
-                            <td>
-                                <select name="deep_link[<?php echo $index; ?>][destination_id]" class="destination-select" data-selected="<?php echo $deep_link['destination_id']; ?>"></select>
-                            </td>
-                            <td><input type="checkbox" name="deep_link[<?php echo $index; ?>][enable_page]" <?php checked($deep_link['enable_page'], 1); ?>></td>
-                            <td><input type="checkbox" name="deep_link[<?php echo $index; ?>][enable_post]" <?php checked($deep_link['enable_post'], 1); ?>></td>
-                            <td><button type="button" class="button remove-row">Remove</button></td>
-                        </tr>
-                    <?php } ?>
+                                usort($options, function($a, $b) {
+                                    return strnatcasecmp($a['label'], $b['label']);
+                                });
+
+                                foreach ($options as $option) {
+                                    echo '<option value="' . esc_attr($option['value']) . '" ' . ($option['selected'] ? 'selected' : '') . '>' . esc_html($option['label']) . '</option>';
+                                }
+                                ?>
+                            </select>
+                        </td>
+                        <td>
+                            <select name="deep_link[<?php echo $index; ?>][destination_id]" class="destination-select" data-selected="<?php echo $deep_link['destination_id']; ?>"></select>
+                        </td>
+                        <td><input type="checkbox" name="deep_link[<?php echo $index; ?>][enable_page]" <?php checked($deep_link['enable_page'], 1); ?>></td>
+                        <td><input type="checkbox" name="deep_link[<?php echo $index; ?>][enable_post]" <?php checked($deep_link['enable_post'], 1); ?>></td>
+                        <td><button type="button" class="button remove-row">Remove</button></td>
+                    </tr>
+                <?php } ?>
                 </tbody>
             </table>
             <p><button type="button" id="add-row" class="button">Add Row</button></p>
@@ -252,51 +289,51 @@ function xlinks_deep_links_page() {
         </form>
     </div>
     <script>
-    jQuery(document).ready(function($) {
-        $('#add-row').click(function() {
-            var index = $('#deep-links-table tbody tr').length;
-            var row = '<tr>' +
-                '<td><input type="text" name="deep_link[' + index + '][link_text]" class="regular-text"></td>' +
-                '<td><select name="deep_link[' + index + '][destination_type]" class="destination-type">' +
-                '<?php foreach ($filtered_post_types as $post_type) { echo '<option value="' . $post_type->name . '">' . $post_type->label . '</option>'; } ?>' +
-                '</select></td>' +
-                '<td><select name="deep_link[' + index + '][destination_id]" class="destination-select"></select></td>' +
-                '<td><input type="checkbox" name="deep_link[' + index + '][enable_page]"></td>' +
-                '<td><input type="checkbox" name="deep_link[' + index + '][enable_post]"></td>' +
-                '<td><button type="button" class="button remove-row">Remove</button></td>' +
-                '</tr>';
-            $('#deep-links-table tbody').append(row);
-            $('#deep-links-table tbody tr:last .destination-type').trigger('change');
-        });
+        jQuery(document).ready(function($) {
+            $('#add-row').click(function() {
+                var index = $('#deep-links-table tbody tr').length;
+                var row = '<tr>' +
+                    '<td><input type="text" name="deep_link[' + index + '][link_text]" class="regular-text"></td>' +
+                    '<td><select name="deep_link[' + index + '][destination_type]" class="destination-type">' +
+                    '<?php foreach ($filtered_post_types as $post_type) { echo '<option value="' . $post_type->name . '">' . $post_type->label . '</option>'; } ?>' +
+                    '</select></td>' +
+                    '<td><select name="deep_link[' + index + '][destination_id]" class="destination-select"></select></td>' +
+                    '<td><input type="checkbox" name="deep_link[' + index + '][enable_page]"></td>' +
+                    '<td><input type="checkbox" name="deep_link[' + index + '][enable_post]"></td>' +
+                    '<td><button type="button" class="button remove-row">Remove</button></td>' +
+                    '</tr>';
+                $('#deep-links-table tbody').append(row);
+                $('#deep-links-table tbody tr:last .destination-type').trigger('change');
+            });
 
-        $(document).on('click', '.remove-row', function() {
-            $(this).closest('tr').remove();
-        });
+            $(document).on('click', '.remove-row', function() {
+                $(this).closest('tr').remove();
+            });
 
-        $(document).on('change', '.destination-type', function() {
-            var select = $(this).closest('tr').find('.destination-select');
-            var post_type = $(this).val();
-            select.empty();
-            $.ajax({
-                url: ajaxurl,
-                data: {
-                    action: 'xlinks_get_posts',
-                    post_type: post_type
-                },
-                success: function(data) {
-                    select.html(data);
-                    var selected = select.data('selected');
-                    if (selected) {
-                        select.val(selected);
+            $(document).on('change', '.destination-type', function() {
+                var select = $(this).closest('tr').find('.destination-select');
+                var post_type = $(this).val();
+                select.empty();
+                $.ajax({
+                    url: ajaxurl,
+                    data: {
+                        action: 'xlinks_get_posts',
+                        post_type: post_type
+                    },
+                    success: function(data) {
+                        select.html(data);
+                        var selected = select.data('selected');
+                        if (selected) {
+                            select.val(selected);
+                        }
                     }
-                }
+                });
+            });
+
+            $('.destination-type').each(function() {
+                $(this).trigger('change');
             });
         });
-
-        $('.destination-type').each(function() {
-            $(this).trigger('change');
-        });
-    });
     </script>
     <?php
 }
@@ -464,7 +501,7 @@ function xlinks_check_for_updates($transient) {
     $repo_owner = 'd2x';
     $repo_name = 'xlinks';
     $plugin_file = plugin_basename(__FILE__); // e.g., xlinks/xlinks.php
-    $current_version = '1.1.3';
+    $current_version = '1.1.4';
 
     // Fetch the latest release information from GitHub
     $response = wp_remote_get(

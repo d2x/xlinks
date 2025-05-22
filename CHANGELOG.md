@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.1.4] - 2025-05-21
+### Added
+- Duplicate check for Deep Link "Link Text"
+- Sorted Deep Links by Link Text
+
 ## [1.1.3] - 2025-05-21
 ### Added
 - Minor UI updates.
