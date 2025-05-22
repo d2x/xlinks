@@ -2,6 +2,8 @@
 
 **xlinks** is a WordPress plugin that enables automatic insertion of deep links into your website's content. It provides a user-friendly interface to manage deep links and customize where and how they appear, enhancing internal linking and improving user navigation.
 
+Due to lack of time for supporting / resolving issues, I will not be publishing this plugin to the Wordpress site. This is for my own personal use, but you're free to fork it and adapt it to your needs.    
+
 - **Author**: d2x
 - **License**: MIT License
 

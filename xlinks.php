@@ -1,10 +1,11 @@
 <?php
-/*
-Plugin Name: xlinks
-Description: A plugin to insert deep links into WordPress content with customizable settings.
-Version: 1.1.3
-Author: d2x
-*/
+/**
+ * Plugin Name: xlinks
+ * Description: A plugin to insert deep links into WordPress content with customizable settings.
+ * Version: 1.1.3
+ * Author: d2x
+ * Author URI: https://github.com/d2x/xlinks
+ */
 
 // Add menu and submenus
 function xlinks_admin_menu() {
