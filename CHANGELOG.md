@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.1.5] - 2025-05-21
+### Added
+- Pre-checked new entry boxes for easier use when adding many items
+
 ## [1.1.4] - 2025-05-21
 ### Added
 - Duplicate check for Deep Link "Link Text"

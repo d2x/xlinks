@@ -298,8 +298,8 @@ function xlinks_deep_links_page() {
                     '<?php foreach ($filtered_post_types as $post_type) { echo '<option value="' . $post_type->name . '">' . $post_type->label . '</option>'; } ?>' +
                     '</select></td>' +
                     '<td><select name="deep_link[' + index + '][destination_id]" class="destination-select"></select></td>' +
-                    '<td><input type="checkbox" name="deep_link[' + index + '][enable_page]"></td>' +
-                    '<td><input type="checkbox" name="deep_link[' + index + '][enable_post]"></td>' +
+                    '<td><input type="checkbox" name="deep_link[' + index + '][enable_page]" checked></td>' +
+                    '<td><input type="checkbox" name="deep_link[' + index + '][enable_post]" checked></td>' +
                     '<td><button type="button" class="button remove-row">Remove</button></td>' +
                     '</tr>';
                 $('#deep-links-table tbody').append(row);
@@ -501,7 +501,7 @@ function xlinks_check_for_updates($transient) {
     $repo_owner = 'd2x';
     $repo_name = 'xlinks';
     $plugin_file = plugin_basename(__FILE__); // e.g., xlinks/xlinks.php
-    $current_version = '1.1.4';
+    $current_version = '1.1.5';
 
     // Fetch the latest release information from GitHub
     $response = wp_remote_get(
